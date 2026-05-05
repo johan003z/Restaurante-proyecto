@@ -49,18 +49,18 @@ const productos = {
 };
 
 // MOSTRAR CATEGORÍA
-function mostrarCategoria(cat){
+async function mostrarCategoria(cat) {
+    let res = await fetch("http://localhost:8000/productos/");
+    let todos = await res.json();
+    let filtrados = todos.filter(p => p.categoria === cat);
+
     let menu = document.getElementById("menu");
     menu.innerHTML = "";
 
-    productos[cat].forEach(p => {
+    filtrados.forEach(p => {
         let div = document.createElement("div");
         div.className = "card";
-        div.innerHTML = `
-            <b>${p.nombre}</b><br>
-            Código: ${p.codigo}<br>
-            $${p.precio}
-        `;
+        div.innerHTML = `<b>${p.nombre}</b><br>Código: ${p.codigo}<br>$${p.precio}`;
         div.onclick = () => agregar(p);
         menu.appendChild(div);
     });
@@ -161,66 +161,65 @@ function validarMesa(){
 }
 
 // ENVIAR
-function enviarPedido(){
+async function enviarPedido() {
     let mesa = validarMesa();
+    if (!mesa || pedido.length === 0) { alert("Faltan datos"); return; }
 
-    if(!mesa || pedido.length === 0){
-        alert("Faltan datos");
-        return;
-    }
+    let total = pedido.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
 
+    let res = await fetch("http://localhost:8000/pedidos/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ numero_orden: numeroOrden, mesa, items: pedido, total })
+    });
+
+    let data = await res.json();
     alert(`Pedido #${numeroOrden} enviado a cocina 🔥`);
 
     numeroOrden++;
     localStorage.setItem("numeroOrden", numeroOrden);
-
     document.getElementById("orden").innerText = "Orden #" + numeroOrden;
-
     limpiarPedido();
 }
 
 // FACTURA
-function generarFactura(){
+async function generarFactura() {
     let mesa = validarMesa();
-    if(!mesa || pedido.length === 0){
-        alert("No hay pedido");
-        return;
-    }
+    if (!mesa || pedido.length === 0) { alert("No hay pedido"); return; }
 
-    let total = 0;
+    let total = pedido.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
 
-    let ticket = document.createElement("div");
-    ticket.className = "ticket";
+    // Primero guarda el pedido
+    let resPedido = await fetch("http://localhost:8000/pedidos/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ numero_orden: numeroOrden, mesa, items: pedido, total })
+    });
+    let pedidoGuardado = await resPedido.json();
 
-    let html = `
-        <h3>RESTAURANTE</h3>
-        <p>Mesa: ${mesa}</p>
-        <p>Orden: ${numeroOrden}</p>
-        <hr>
-    `;
-
-    pedido.forEach(item => {
-        total += item.precio * item.cantidad;
-        html += `
-            <div class="ticket-item">
-                <span>${item.codigo} x${item.cantidad}</span>
-                <span>$${item.precio * item.cantidad}</span>
-            </div>
-        `;
+    // Luego guarda la factura
+    await fetch("http://localhost:8000/facturas/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pedido_id: pedidoGuardado.id, mesa, total })
     });
 
-    html += `
-        <hr>
-        <h3>Total: $${total}</h3>
-        <p>Gracias por su compra</p>
-    `;
-
+    // Imprime el ticket (igual que antes)
+    let ticket = document.createElement("div");
+    ticket.className = "ticket";
+    let html = `<h3>RESTAURANTE</h3><p>Mesa: ${mesa}</p><p>Orden: ${numeroOrden}</p><hr>`;
+    pedido.forEach(item => {
+        html += `<div class="ticket-item"><span>${item.codigo} x${item.cantidad}</span><span>$${item.precio * item.cantidad}</span></div>`;
+    });
+    html += `<hr><h3>Total: $${total}</h3><p>Gracias por su compra</p>`;
     ticket.innerHTML = html;
-
     document.body.appendChild(ticket);
     window.print();
     document.body.removeChild(ticket);
 
+    numeroOrden++;
+    localStorage.setItem("numeroOrden", numeroOrden);
+    document.getElementById("orden").innerText = "Orden #" + numeroOrden;
     limpiarPedido();
 }
 
