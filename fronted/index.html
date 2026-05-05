@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Restaurante - Comandas</title>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🍽️ Sistema de Restaurante</h1>
+
+    <h2 id="orden">Orden #1</h2>
+
+    <input type="number" id="mesa" placeholder="Número de mesa" min="1">
+
+    <!-- CATEGORÍAS -->
+    <div class="categorias">
+        <button onclick="mostrarCategoria('entradas')">🍟 Entradas</button>
+        <button onclick="mostrarCategoria('fuertes')">🍔 Fuertes</button>
+        <button onclick="mostrarCategoria('postres')">🍰 Postres</button>
+        <button onclick="mostrarCategoria('bebidas')">🥤 Bebidas</button>
+        <button onclick="mostrarCategoria('extras')">➕ Extras</button>
+    </div>
+
+    <!-- MENU -->
+    <div class="menu" id="menu"></div>
+
+    <!-- PEDIDO -->
+    <div class="pedido-box">
+        <h2>🧾 Pedido</h2>
+        <div id="lista"></div>
+        <div class="total" id="total">Total: $0</div>
+
+        <button class="enviar" onclick="enviarPedido()">Enviar a cocina 🔥</button>
+        <button class="factura" onclick="generarFactura()">Generar Factura 🧾</button>
+        <button class="limpiar" onclick="limpiarPedido()">Limpiar</button>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
