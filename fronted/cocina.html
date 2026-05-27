@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cocina & Historial</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Arial&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f172a;
+    color: white;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .container {
+    width: 95%;
+    max-width: 1100px;
+    text-align: center;
+  }
+
+  h1 { margin-top: 20px; font-size: 28px; }
+
+  /* TABS */
+  .categorias {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+  }
+
+  .categorias button {
+    padding: 25px;
+    font-size: 20px;
+    border-radius: 15px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+  }
+
+  .categorias button:hover { transform: scale(1.05); }
+  .categorias button.active {
+    background: #1d4ed8;
+    outline: 3px solid white;
+  }
+
+  /* CONTENT */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── COCINA ── */
+  .cocina-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0 15px;
+  }
+
+  .cocina-top h2 { font-size: 22px; }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #22c55e;
+    font-weight: bold;
+  }
+
+  .live-dot {
+    width: 10px; height: 10px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  .pedidos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+
+  .pedido-card {
+    background: #1e293b;
+    border-radius: 20px;
+    overflow: hidden;
+    text-align: left;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    background: #0f172a;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-header .mesa { font-size: 20px; font-weight: bold; color: #3b82f6; }
+  .card-header .orden { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+  .card-header .tiempo { font-size: 13px; color: #fbbf24; font-weight: bold; }
+
+  .card-body { padding: 14px 18px; }
+
+  .item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid #334155;
+    font-size: 15px;
+  }
+
+  .item-row:last-child { border-bottom: none; }
+
+  .cant-badge {
+    background: #3b82f6;
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 3px 10px;
+    border-radius: 10px;
+  }
+
+  .card-footer {
+    background: #0f172a;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-footer .total-text { font-size: 17px; font-weight: bold; color: #22c55e; }
+
+  .btn-listo {
+    background: #22c55e;
+    color: black;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+  }
+
+  .btn-listo:hover { transform: scale(1.05); }
+
+  .empty-state {
+    background: #1e293b;
+    border-radius: 20px;
+    padding: 60px 20px;
+    font-size: 18px;
+    color: #94a3b8;
+    margin-bottom: 20px;
+  }
+
+  /* ── HISTORIAL / FACTURAS ── */
+  .tabla-box {
+    background: #1e293b;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    text-align: left;
+  }
+
+  .filtros {
+    padding: 16px 20px;
+    border-bottom: 1px solid #334155;
+  }
+
+  select {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead { background: #0f172a; }
+
+  th {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+  }
+
+  td {
+    padding: 14px 18px;
+    font-size: 15px;
+    border-bottom: 1px solid #334155;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #0f172a; }
+
+  .badge-mesa {
+    background: #1e3a5f;
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .btn-ver {
+    background: transparent;
+    border: 2px solid #3b82f6;
+    color: #3b82f6;
+    padding: 7px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-ver:hover { background: #3b82f6; color: white; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #1e293b;
+    border-radius: 20px;
+    width: 400px;
+    max-width: 95vw;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal-header {
+    background: #0f172a;
+    padding: 18px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-header h3 { font-size: 20px; }
+
+  .btn-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .btn-close:hover { color: white; }
+
+  .modal-body { padding: 22px; }
+
+  .factura-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    font-size: 14px;
+    color: #94a3b8;
+  }
+
+  .factura-meta span { color: white; font-weight: bold; }
+
+  .fac-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #334155;
+    font-size: 15px;
+  }
+
+  .fac-item:last-child { border-bottom: none; }
+  .fac-item-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .fac-precio { font-weight: bold; color: #22c55e; }
+
+  .fac-total {
+    background: #0f172a;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 14px;
+  }
+
+  .fac-total-num { color: #22c55e; font-size: 22px; }
+
+  .btn-imprimir {
+    width: 100%;
+    margin-top: 15px;
+    background: #f59e0b;
+    color: black;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+  }
+
+  .btn-imprimir:hover { transform: scale(1.02); }
+
+  .loading-text {
+    padding: 40px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 16px;
+  }
+
+  @media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area {
+      position: fixed; top: 0; left: 0;
+      width: 300px;
+      background: white; color: black;
+      padding: 20px; font-family: monospace;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🍽️ Panel de Restaurante</h1>
+
+  <!-- TABS -->
+  <div class="categorias">
+    <button onclick="switchTab('cocina', this)" class="active">🍳 Cocina</button>
+    <button onclick="switchTab('historial', this)">📋 Historial</button>
+    <button onclick="switchTab('facturas', this)">🧾 Facturas</button>
+  </div>
+
+  <!-- COCINA -->
+  <div class="panel active" id="panel-cocina">
+    <div class="cocina-top">
+      <h2 id="contador-titulo">Pedidos activos</h2>
+      <div class="live-badge"><div class="live-dot"></div> EN VIVO</div>
+    </div>
+    <div class="pedidos-grid" id="pedidos-cocina">
+      <div class="empty-state">Cargando pedidos...</div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="panel" id="panel-historial">
+    <div class="tabla-box">
+      <div class="filtros">
+        <select id="filtro-mesa" onchange="cargarHistorial()">
+          <option value="">Todas las mesas</option>
+        </select>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Orden</th><th>Mesa</th><th>Items</th>
+            <th>Total</th><th>Fecha</th><th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-historial">
+          <tr><td colspan="6" class="loading-text">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FACTURAS -->
+  <div class="panel" id="panel-facturas">
+    <div class="tabla-box">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Mesa</th><th>Total</th><th>Fecha</th><th>Ver</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-facturas">
+          <tr><td colspan="5" class="loading-text">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-titulo">Detalle</h3>
+      <button class="btn-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div id="print-area"></div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+let pedidosActivos = [];
+
+// ── TABS ──
+function switchTab(tab, btn) {
+  document.querySelectorAll('.categorias button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'historial') cargarHistorial();
+  if (tab === 'facturas')  cargarFacturas();
+}
+
+// ── COCINA ──
+async function cargarCocina() {
+  try {
+    const res  = await fetch(API + "/pedidos/");
+    const data = await res.json();
+    pedidosActivos = data.slice(0, 20);
+    renderCocina();
+  } catch(e) {
+    document.getElementById('pedidos-cocina').innerHTML =
+      '<div class="empty-state">⚠️ No se puede conectar a la API</div>';
+  }
+}
+
+function renderCocina() {
+  const grid = document.getElementById('pedidos-cocina');
+  document.getElementById('contador-titulo').textContent =
+    `Pedidos activos (${pedidosActivos.length})`;
+
+  if (pedidosActivos.length === 0) {
+    grid.innerHTML = '<div class="empty-state">✅ No hay pedidos pendientes</div>';
+    return;
+  }
+
+  grid.innerHTML = pedidosActivos.map(p => {
+    const total  = p.items.reduce((a, i) => a + i.precio * i.cantidad, 0);
+    const tiempo = formatTiempo(new Date(p.fecha));
+    const items  = p.items.map(i => `
+      <div class="item-row">
+        <span>${i.nombre}</span>
+        <span class="cant-badge">x${i.cantidad}</span>
+      </div>`).join('');
+
+    return `
+      <div class="pedido-card" id="card-${p.id}">
+        <div class="card-header">
+          <div>
+            <div class="mesa">Mesa ${p.mesa}</div>
+            <div class="orden">Orden #${p.numero_orden}</div>
+          </div>
+          <div class="tiempo">${tiempo}</div>
+        </div>
+        <div class="card-body">${items}</div>
+        <div class="card-footer">
+          <span class="total-text">$${total}</span>
+          <button class="btn-listo" onclick="marcarListo(${p.id})">✓ Listo</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function marcarListo(id) {
+  const card = document.getElementById('card-' + id);
+  card.style.transition = 'all 0.3s';
+  card.style.opacity = '0';
+  card.style.transform = 'scale(0.9)';
+  setTimeout(() => {
+    pedidosActivos = pedidosActivos.filter(p => p.id !== id);
+    renderCocina();
+  }, 300);
+}
+
+function formatTiempo(fecha) {
+  const diff = Math.floor((Date.now() - fecha.getTime()) / 60000);
+  if (diff < 1)  return 'Ahora mismo';
+  if (diff < 60) return diff + ' min';
+  return Math.floor(diff / 60) + 'h ' + (diff % 60) + 'min';
+}
+
+// ── HISTORIAL ──
+async function cargarHistorial() {
+  try {
+    const res  = await fetch(API + "/pedidos/");
+    const data = await res.json();
+
+    const mesas = [...new Set(data.map(p => p.mesa))].sort((a,b)=>a-b);
+    const sel   = document.getElementById('filtro-mesa');
+    const val   = sel.value;
+    sel.innerHTML = '<option value="">Todas las mesas</option>' +
+      mesas.map(m => `<option value="${m}" ${val==m?'selected':''}>Mesa ${m}</option>`).join('');
+
+    const filtro    = sel.value;
+    const filtrados = filtro ? data.filter(p => p.mesa == filtro) : data;
+    const tbody     = document.getElementById('tbody-historial');
+
+    if (!filtrados.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="loading-text">Sin registros</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtrados.map(p => {
+      const total = p.items.reduce((a,i) => a + i.precio * i.cantidad, 0);
+      const fecha = new Date(p.fecha).toLocaleString('es-CO');
+      return `<tr>
+        <td><b>#${p.numero_orden}</b></td>
+        <td><span class="badge-mesa">Mesa ${p.mesa}</span></td>
+        <td>${p.items.length} items</td>
+        <td style="color:#22c55e;font-weight:bold">$${total}</td>
+        <td style="color:#94a3b8;font-size:13px">${fecha}</td>
+        <td><button class="btn-ver" onclick='abrirDetalle(${JSON.stringify(p)})'>Ver</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('tbody-historial').innerHTML =
+      '<tr><td colspan="6" class="loading-text">Error al cargar</td></tr>';
+  }
+}
+
+// ── FACTURAS ──
+async function cargarFacturas() {
+  try {
+    const res  = await fetch(API + "/facturas/");
+    const data = await res.json();
+    const tbody = document.getElementById('tbody-facturas');
+
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="loading-text">Sin facturas</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(f => {
+      const fecha = new Date(f.fecha).toLocaleString('es-CO');
+      return `<tr>
+        <td><b>#${f.id}</b></td>
+        <td><span class="badge-mesa">Mesa ${f.mesa}</span></td>
+        <td style="color:#22c55e;font-weight:bold">$${f.total}</td>
+        <td style="color:#94a3b8;font-size:13px">${fecha}</td>
+        <td><button class="btn-ver" onclick="abrirFactura(${f.pedido_id},${f.mesa},${f.total},'${fecha}')">Ver</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('tbody-facturas').innerHTML =
+      '<tr><td colspan="5" class="loading-text">Error al cargar</td></tr>';
+  }
+}
+
+// ── MODAL DETALLE ──
+function abrirDetalle(p) {
+  const total = p.items.reduce((a,i) => a + i.precio * i.cantidad, 0);
+  const fecha = new Date(p.fecha).toLocaleString('es-CO');
+  document.getElementById('modal-titulo').textContent = '🧾 Detalle del Pedido';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="factura-meta">
+      <div>Mesa <span>${p.mesa}</span></div>
+      <div>Orden <span>#${p.numero_orden}</span></div>
+    </div>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:14px">${fecha}</div>
+    ${p.items.map(i => `
+      <div class="fac-item">
+        <div>
+          <div>${i.nombre}</div>
+          <div class="fac-item-sub">${i.codigo} × ${i.cantidad}</div>
+        </div>
+        <div class="fac-precio">$${i.precio * i.cantidad}</div>
+      </div>`).join('')}
+    <div class="fac-total">
+      <span>Total</span>
+      <span class="fac-total-num">$${total}</span>
+    </div>
+    <button class="btn-imprimir" onclick="imprimirTicket(${p.mesa},${p.numero_orden},${JSON.stringify(p.items)},${total})">
+      🖨️ Imprimir
+    </button>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+// ── MODAL FACTURA ──
+async function abrirFactura(pedidoId, mesa, total, fecha) {
+  try {
+    const res    = await fetch(API + "/pedidos/");
+    const pedidos = await res.json();
+    const pedido  = pedidos.find(p => p.id === pedidoId);
+    document.getElementById('modal-titulo').textContent = '🧾 Factura';
+    document.getElementById('modal-body').innerHTML = `
+      <div class="factura-meta">
+        <div>Mesa <span>${mesa}</span></div>
+        <div style="font-size:12px">${fecha}</div>
+      </div>
+      ${pedido ? pedido.items.map(i => `
+        <div class="fac-item">
+          <div>
+            <div>${i.nombre}</div>
+            <div class="fac-item-sub">${i.codigo} × ${i.cantidad}</div>
+          </div>
+          <div class="fac-precio">$${i.precio * i.cantidad}</div>
+        </div>`).join('') : '<p style="color:#94a3b8">Items no disponibles</p>'}
+      <div class="fac-total">
+        <span>Total</span>
+        <span class="fac-total-num">$${total}</span>
+      </div>
+      <button class="btn-imprimir" onclick="imprimirTicket(${mesa},${pedido?.numero_orden||''},${JSON.stringify(pedido?.items||[])},${total})">
+        🖨️ Imprimir
+      </button>`;
+    document.getElementById('modal').classList.add('open');
+  } catch(e) { alert("Error al cargar la factura"); }
+}
+
+function cerrarModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) cerrarModal();
+});
+
+// ── IMPRIMIR ──
+function imprimirTicket(mesa, orden, items, total) {
+  document.getElementById('print-area').innerHTML = `
+    <div style="font-family:monospace;padding:20px;max-width:300px">
+      <h2 style="text-align:center">RESTAURANTE</h2>
+      <p style="text-align:center">Mesa: ${mesa} | Orden: #${orden}</p>
+      <hr>
+      ${items.map(i=>`
+        <div style="display:flex;justify-content:space-between">
+          <span>${i.codigo} x${i.cantidad} ${i.nombre}</span>
+          <span>$${i.precio*i.cantidad}</span>
+        </div>`).join('')}
+      <hr>
+      <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px">
+        <span>TOTAL</span><span>$${total}</span>
+      </div>
+      <p style="text-align:center;margin-top:15px">Gracias por su compra ❤️</p>
+    </div>`;
+  window.print();
+}
+
+// ── INIT ──
+cargarCocina();
+setInterval(cargarCocina, 10000);
+</script>
+</body>
+</html>
